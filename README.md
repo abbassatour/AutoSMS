@@ -1,34 +1,40 @@
 
-Auto SMS — Enterprise CRM & Automated SMS Dispatcher
+# Auto SMS — Enterprise CRM & Automated SMS Dispatcher
 
-Flutter Dart Architecture: Very Good State Management: Bloc Database: Drift
-SQLite Cloud Backend: Supabase Push Service: Firebase FCM License: MIT
+[![Flutter](https://img.shields.io/badge/Flutter-3.41.0-02569B?logo=flutter)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.11.0-0175C2?logo=dart)](https://dart.dev)
+[![Architecture: Very Good](<https://img.shields.io/badge/Architecture-Very%20Good%20CLI-B22C89>)](https://verygood.ventures)
+[![State Management: Bloc](<https://img.shields.io/badge/State%20Management-Bloc%20%2F%20Cubit-blue>)](https://bloclibrary.dev)
+[![Database: Drift SQLite](<https://img.shields.io/badge/Local%20DB-Drift%20SQLite-00599C>)](https://drift.simonbinder.eu)
+[![Cloud Backend: Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?logo=supabase)](https://supabase.com)
+[![Push Service: Firebase FCM](<https://img.shields.io/badge/Push-Firebase%20Cloud%20Messaging-FFCA28?logo=firebase>)](https://firebase.google.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An enterprise-grade, offline-first mobile CRM and automated SMS dispatching
-platform built with Flutter. The system allows businesses to manage contacts and
-customer segments, assign scheduled SMS campaigns to specific connected Android
-devices, and reliably dispatch automated messages in the background using
-Firebase Cloud Messaging (FCM) silent triggers orchestrated by Supabase Edge
-Functions.
+An enterprise-grade, offline-first mobile CRM and automated SMS dispatching platform built with Flutter. The system allows businesses to manage contacts and customer segments, assign scheduled SMS campaigns to specific connected Android devices, and reliably dispatch automated messages in the background using Firebase Cloud Messaging (FCM) silent triggers orchestrated by Supabase Edge Functions.
 
-📑 Table of Contents
+---
 
-- System Architecture & Workflow
-- Key Features
-- Monorepo Package Structure
-- Prerequisites
-- Environment Configuration
-- Supabase & Cloud Backend Setup
-- Firebase Setup
-- Installation & Build Guide
-- Flavors & Execution
-- Localization (i18n)
-- Testing & Quality Assurance
+## 📑 Table of Contents
 
-🔄 System Architecture & Workflow
+- [System Architecture &amp; Workflow](#-system-architecture--workflow)
+- [Key Features](#-key-features)
+- [Monorepo Package Structure](#-monorepo-package-structure)
+- [Prerequisites](#-prerequisites)
+- [Environment Configuration](#-environment-configuration)
+- [Supabase &amp; Cloud Backend Setup](#-supabase--cloud-backend-setup)
+- [Firebase Setup](#-firebase-setup)
+- [Installation &amp; Build Guide](#-installation--build-guide)
+- [Flavors &amp; Execution](#-flavors--execution)
+- [Localization (i18n)](#-localization-i18n)
+- [Testing &amp; Quality Assurance](#-testing--quality-assurance)
+
+---
+
+## 🔄 System Architecture & Workflow
 
 The platform operates on an offline-first, distributed execution model:
 
+```
 [ Supabase Edge Cron ] ──> Checks active schedules every minute
          │
          ▼
@@ -41,52 +47,42 @@ The platform operates on an offline-first, distributed execution model:
          ├──> Sends native SMS messages via Telephony engine (with automatic retries)
          ├──> Records dispatch logs locally in SQLite database
          └──> Syncs logs and metadata back to Supabase Cloud
+```
 
-1. Scheduling Engine: Campaigns are configured locally and synced to Supabase.
-   A serverless Edge Function (auto_sms_cron) executes on a schedule, evaluates
-   schedules (configured for Damascus UTC+3 time), and detects campaigns that
-   must run at the current minute.
-2. Device Awakening: The Edge Function dispatches an FCM silent data message
-   directly to the specific Android device registered to execute the campaign.
-3. Background Dispatcher: The device receives the payload in
-   _firebaseMessagingBackgroundHandler, initializes local storage and
-   repository instances, queries the target group's contacts, and sends the SMS
-   messages natively using Android telephony APIs.
-4. Resilient Synchronization: Dispatch status logs (sent_auto_fcm or
-   failed_auto_fcm) are saved locally to SQLite immediately, ensuring audit
-   trails are never lost, and then pushed to Supabase when network connectivity
-   is available.
+1. **Scheduling Engine:** Campaigns are configured locally and synced to Supabase. A serverless Edge Function (`auto_sms_cron`) executes on a schedule, evaluates schedules (configured for Damascus UTC+3 time), and detects campaigns that must run at the current minute.
+2. **Device Awakening:** The Edge Function dispatches an FCM silent data message directly to the specific Android device registered to execute the campaign.
+3. **Background Dispatcher:** The device receives the payload in `_firebaseMessagingBackgroundHandler`, initializes local storage and repository instances, queries the target group's contacts, and sends the SMS messages natively using Android telephony APIs.
+4. **Resilient Synchronization:** Dispatch status logs (`sent_auto_fcm` or `failed_auto_fcm`) are saved locally to SQLite immediately, ensuring audit trails are never lost, and then pushed to Supabase when network connectivity is available.
 
-🚀 Key Features
+---
 
-- Offline-First CRM:
-  - Fast local storage using Drift (SQLite).
-  - Soft-deletion support across groups, contacts, and schedules to prevent
-    data desynchronization between clients.
-  - Smart bi-directional synchronization with Supabase
-    (downloadIfCloudIsNewer and syncAllToCloud).
-- Contact & Group Management:
-  - Import device contacts directly into the CRM (flutter_contacts).
+## 🚀 Key Features
+
+- **Offline-First CRM:**
+  - Fast local storage using **Drift (SQLite)**.
+  - Soft-deletion support across groups, contacts, and schedules to prevent data desynchronization between clients.
+  - Smart bi-directional synchronization with Supabase (`downloadIfCloudIsNewer` and `syncAllToCloud`).
+- **Contact & Group Management:**
+  - Import device contacts directly into the CRM (`flutter_contacts`).
   - Search, filter by group, and execute bulk group assignments.
-  - Quick action integrations: Direct Phone Call, WhatsApp chat launch, and
-    native SMS composers (url_launcher).
-- Automated Campaign Scheduling:
-  - Schedule recurring monthly campaigns by specifying day of the month
-    (1–31), hour, and minute.
+  - Quick action integrations: Direct Phone Call, WhatsApp chat launch, and native SMS composers (`url_launcher`).
+- **Automated Campaign Scheduling:**
+  - Schedule recurring monthly campaigns by specifying day of the month (1–31), hour, and minute.
   - Bind specific campaigns to dedicated sender devices.
   - Toggle campaign states on/off with instantaneous synchronization.
-- Hardware-Linked Device Management:
-  - Register sending phones with persistent hardware fingerprints
-    (AndroidId) and unique names.
+- **Hardware-Linked Device Management:**
+  - Register sending phones with persistent hardware fingerprints (`AndroidId`) and unique names.
   - Dynamic device unlinking and remote FCM token rotation.
-- Bilingual Internationalization:
-  - Native localization for English (en) and Arabic (ar) with complete
-    Right-to-Left (RTL) layout support.
+- **Bilingual Internationalization:**
+  - Native localization for English (`en`) and Arabic (`ar`) with complete Right-to-Left (RTL) layout support.
 
-📦 Monorepo Package Structure
+---
+
+## 📦 Monorepo Package Structure
 
 This project follows a clean, layered monorepo architecture:
 
+```
 auto_sms/
 ├── lib/                             # Core Flutter Application
 │   ├── app/                         # App initialization, AuthGate, WorkspaceInitializer
@@ -111,26 +107,30 @@ auto_sms/
     ├── config.toml                  # Supabase local development configuration
     └── functions/
         └── auto_sms_cron/           # Deno Edge Function for automated cron evaluation
+```
 
-🛠 Prerequisites
+---
+
+## 🛠 Prerequisites
 
 Ensure you have the following installed on your development workstation:
 
-- Flutter SDK: >= 3.41.0
-- Dart SDK: >= 3.11.0
-- Android SDK: API Level 34+ (SMS and contact permissions required for
-  testing)
-- Supabase CLI: For local development or Edge Function deployment
-- Deno: Required for running and debugging Supabase Edge Functions locally
-- Firebase Project: Configured with Cloud Messaging enabled
+- **Flutter SDK:** `>= 3.41.0`
+- **Dart SDK:** `>= 3.11.0`
+- **Android SDK:** API Level 34+ (SMS and contact permissions required for testing)
+- **Supabase CLI:** For local development or Edge Function deployment
+- **Deno:** Required for running and debugging Supabase Edge Functions locally
+- **Firebase Project:** Configured with Cloud Messaging enabled
 
-🔐 Environment Configuration
+---
 
-This project eliminates hardcoded credentials by injecting secrets at compile
-time via String.fromEnvironment through lib/app/config/env_config.dart.
+## 🔐 Environment Configuration
 
-Create a config.json file in the root directory (this file is git-ignored):
+This project eliminates hardcoded credentials by injecting secrets at compile time via `String.fromEnvironment` through `lib/app/config/env_config.dart`.
 
+Create a `config.json` file in the root directory (this file is git-ignored):
+
+```json
 {
   "SUPABASE_URL": "https://your-project-id.supabase.co",
   "SUPABASE_ANON_KEY": "your-supabase-anon-key",
@@ -144,14 +144,17 @@ Create a config.json file in the root directory (this file is git-ignored):
   "FIREBASE_AUTH_DOMAIN": "your-firebase-project-id.firebaseapp.com",
   "FIREBASE_MEASUREMENT_ID": "G-XXXXXXXXXX"
 }
+```
 
-🗄 Supabase & Cloud Backend Setup
+---
 
-1. Database Schema
+## 🗄 Supabase & Cloud Backend Setup
 
-Execute the following SQL queries in the Supabase SQL Editor to configure your
-remote PostgreSQL database:
+### 1. Database Schema
 
+Execute the following SQL queries in the Supabase SQL Editor to configure your remote PostgreSQL database:
+
+```sql
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
@@ -232,165 +235,173 @@ create policy "Users can manage their own schedules" on public.schedules for all
 create policy "Users can manage their own messages" on public.messages for all using (auth.uid() = user_id);
 create policy "Users can manage their own devices" on public.user_tokens for all using (auth.uid() = user_id);
 create policy "Users can manage their own metadata" on public.sync_metadata for all using (auth.uid() = user_id);
+```
 
-2. Deploying the Edge Function
+### 2. Deploying the Edge Function
 
 The Edge Function handles cron evaluation and triggers silent FCM messages:
 
+```bash
 # Set your Firebase Service Account JSON inside Supabase Secrets
-
 supabase secrets set FIREBASE_SERVICE_ACCOUNT='{"type":"service_account",...}'
 
 # Deploy the function
-
 supabase functions deploy auto_sms_cron --no-verify-jwt
+```
 
-You can schedule this function via pg_cron in Supabase to run every minute:
+You can schedule this function via `pg_cron` in Supabase to run every minute:
 
+```sql
 select cron.schedule(
   'auto-sms-cron-job',
   '* * * * *',
-
-$$
-
-
-$$
-
+  $$
   select
     net.http_post(
       url:='https://your-project-id.supabase.co/functions/v1/auto_sms_cron',
       headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_SERVICE_ROLE_KEY"}'::jsonb
     ) as request_id;
-
-$$
-
-
-$$
-
+  $$
 );
+```
 
-🔥 Firebase Setup
+---
 
-1. Create a Firebase project at Firebase Console.
-2. Add an Android app with the package name defined in your
-   android/app/build.gradle.
-3. Download google-services.json and place it in android/app/.
-4. Generate a private key for your service account from Project Settings >
-   Service Accounts and inject it into the Supabase Edge Function environment
-   secret as described above.
+## 🔥 Firebase Setup
 
-⚡ Installation & Build Guide
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
+2. Add an Android app with the package name defined in your `android/app/build.gradle`.
+3. Download `google-services.json` and place it in `android/app/`.
+4. Generate a private key for your service account from **Project Settings > Service Accounts** and inject it into the Supabase Edge Function environment secret as described above.
 
-1. Fetch Dependencies
+---
+
+## ⚡ Installation & Build Guide
+
+### 1. Fetch Dependencies
 
 Run pub get across all packages in the repository:
 
+```bash
 flutter pub get
 (cd packages/local_storage_api && flutter pub get)
 (cd packages/cloud_storage_api && flutter pub get)
 (cd packages/crm_repository && flutter pub get)
+```
 
-2. Run Code Generation
+### 2. Run Code Generation
 
 Generate Drift SQLite database code and localization files:
 
+```bash
 # Generate Drift Database Models
-
 (cd packages/local_storage_api && dart run build_runner build --delete-conflicting-outputs)
 
 # Generate Localization Classes
-
 flutter gen-l10n
+```
 
-📱 Flavors & Execution
+---
 
-The project supports three flavors: development, staging, and production.
+## 📱 Flavors & Execution
 
-Running in Development
+The project supports three flavors: `development`, `staging`, and `production`.
 
-flutter run 
-  --flavor development 
-  --target lib/main_development.dart 
+### Running in Development
+
+```bash
+flutter run \
+  --flavor development \
+  --target lib/main_development.dart \
   --dart-define-from-file=config.json
+```
 
-Running in Production
+### Running in Production
 
-flutter run 
-  --flavor production 
-  --target lib/main_production.dart 
+```bash
+flutter run \
+  --flavor production \
+  --target lib/main_production.dart \
   --dart-define-from-file=config.json
+```
 
-Building Android Release APK
+### Building Android Release APK
 
-flutter build apk 
-  --flavor production 
-  --target lib/main_production.dart 
+```bash
+flutter build apk \
+  --flavor production \
+  --target lib/main_production.dart \
   --dart-define-from-file=config.json
+```
 
-Building Android App Bundle (AAB)
+### Building Android App Bundle (AAB)
 
-flutter build appbundle 
-  --flavor production 
-  --target lib/main_production.dart 
+```bash
+flutter build appbundle \
+  --flavor production \
+  --target lib/main_production.dart \
   --dart-define-from-file=config.json
+```
 
-🌐 Localization (i18n)
+---
 
-The application manages internationalization through Flutter's synthetic
-AppLocalizations package:
+## 🌐 Localization (i18n)
 
-- Translation source files: lib/l10n/arb/app_en.arb and
-  lib/l10n/arb/app_ar.arb.
-- Configuration: l10n.yaml.
-- Generated code output: lib/l10n/gen/.
+The application manages internationalization through Flutter's synthetic `AppLocalizations` package:
+
+- Translation source files: `lib/l10n/arb/app_en.arb` and `lib/l10n/arb/app_ar.arb`.
+- Configuration: `l10n.yaml`.
+- Generated code output: `lib/l10n/gen/`.
 
 Whenever you add or modify string keys, recompile translations:
 
+```bash
 flutter gen-l10n
+```
 
 Access localized strings within widgets using the context extension:
 
+```dart
 final l10n = context.l10n;
 Text(l10n.dashboardTitle);
+```
 
-🧪 Testing & Quality Assurance
+---
 
-Run Tests
+## 🧪 Testing & Quality Assurance
 
+### Run Tests
+
+```bash
 # Run unit and widget tests with randomized seed
-
 flutter test --test-randomize-ordering-seed random
 
 # Run package-specific tests
-
 (cd packages/crm_repository && flutter test)
 (cd packages/local_storage_api && flutter test)
 (cd packages/cloud_storage_api && flutter test)
+```
 
-Code Formatting and Static Analysis
+### Code Formatting and Static Analysis
 
-The codebase adheres to very_good_analysis and bloc_lint:
+The codebase adheres to `very_good_analysis` and `bloc_lint`:
 
+```bash
 # Analyze main project
-
 flutter analyze
 
 # Lint Blocs & Cubits
-
 dart run bloc_tools:bloc lint .
+```
 
-🔒 Android Permissions Note
+---
 
-Because this app acts as an enterprise SMS dispatcher, the following permissions
-are configured in AndroidManifest.xml and requested at runtime:
+## 🔒 Android Permissions Note
 
-- android.permission.SEND_SMS: Required to dispatch campaign SMS messages
-  programmatically.
-- android.permission.READ_PHONE_STATE: Required by the telephony plugin to
-  access SIM network capabilities.
-- android.permission.READ_CONTACTS: Required to sync phone address books into
-  the CRM.
-- android.permission.POST_NOTIFICATIONS: Required on Android 13+ (API 33+) for
-  persistent background status indications.
-- android.permission.WAKE_LOCK: Ensures the background isolate can finish
-  dispatching campaigns before entering deep sleep.
+Because this app acts as an enterprise SMS dispatcher, the following permissions are configured in `AndroidManifest.xml` and requested at runtime:
+
+- `android.permission.SEND_SMS`: Required to dispatch campaign SMS messages programmatically.
+- `android.permission.READ_PHONE_STATE`: Required by the `telephony` plugin to access SIM network capabilities.
+- `android.permission.READ_CONTACTS`: Required to sync phone address books into the CRM.
+- `android.permission.POST_NOTIFICATIONS`: Required on Android 13+ (API 33+) for persistent background status indications.
+- `android.permission.WAKE_LOCK`: Ensures the background isolate can finish dispatching campaigns before entering deep sleep.
